@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Video
+from .models import User, Video, Transcript, Summary
 from django.contrib.auth import authenticate
 
 class SignupSerializer(serializers.Serializer):
@@ -39,3 +39,26 @@ class VideoSerializer(serializers.ModelSerializer):
         model = Video
         fields = ["id", "title", "file", "uploaded_at", "processed", "duration"]
         read_only_fields = ["uploaded_at", "processed", "duration"]
+
+
+class TranscriptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transcript
+        fields = ["id", "video", "text", "start_time", "end_time", "created_at"]
+        read_only_fields = ["created_at"]
+
+
+class SummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Summary
+        fields = ["id", "video", "text", "created_at"]
+        read_only_fields = ["created_at"]
+
+
+class VideoDetailSerializer(serializers.ModelSerializer):
+    transcript = TranscriptSerializer(source='transcript_set', many=True, read_only=True)
+    summary = SummarySerializer(source='summary_set', many=True, read_only=True)
+    
+    class Meta:
+        model = Video
+        fields = ["id", "title", "file", "uploaded_at", "processed", "duration", "transcript", "summary"]

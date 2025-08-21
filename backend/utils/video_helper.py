@@ -1,14 +1,17 @@
-# app/utils/video_processing.py
+# utils/video_helper.py - Video processing utilities
 import whisper
 import os
 from groq import Groq
-from api.models import Transcript, Summary
+from api.models import Video, Transcript, Summary
+from django.conf import settings
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+client = Groq(api_key=settings.GROQ_API_KEY)
+
 
 def process_video(video_obj):
     """
     Transcribe the full audio into a single transcript and summarize it.
+    Alternative function that takes video object directly.
     """
     file_path = video_obj.file.path
 
@@ -35,7 +38,15 @@ def process_video(video_obj):
     video_obj.duration = result.get("duration", 0.0)
     video_obj.save()
 
-    return transcript, summary
+    # Return serializable data instead of model objects
+    return {
+        "transcript_id": transcript.id,
+        "transcript_text": transcript.text,
+        "summary_id": summary.id,
+        "summary_text": summary.text,
+        "duration": video_obj.duration,
+        "message": f"Successfully processed video {video_obj.id}"
+    }
 
 def generate_summary(transcript):
     """

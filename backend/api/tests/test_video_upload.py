@@ -33,9 +33,11 @@ class VideoUploadTest(TestCase):
             content_type='video/mp4'
         )
 
-    @patch('api.views.process_video_task.delay')
+    @patch('utils.video_helper.process_video_task')
     def test_successful_video_upload(self, mock_task):
         """Test successful video upload"""
+        mock_task.return_value = "Successfully processed video"
+        
         data = {
             'title': 'My Test Video',
             'file': self.video_file
@@ -113,9 +115,10 @@ class VideoUploadTest(TestCase):
         # Adjust assertion based on your validation logic
         self.assertIn(response.status_code, [status.HTTP_400_BAD_REQUEST])
 
-    @patch('api.views.process_video_task.delay')
+    @patch('utils.video_helper.process_video_task')
     def test_multiple_video_uploads(self, mock_task):
         """Test uploading multiple videos"""
+        mock_task.return_value = "Successfully processed video"
         videos_data = [
             {'title': 'Video 1', 'file': SimpleUploadedFile('video1.mp4', b'content1', 'video/mp4')},
             {'title': 'Video 2', 'file': SimpleUploadedFile('video2.mp4', b'content2', 'video/mp4')},
@@ -147,9 +150,10 @@ class VideoUploadTest(TestCase):
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch('api.views.process_video_task.delay')
+    @patch('api.views.process_video_task')
     def test_video_upload_large_file(self, mock_task):
         """Test uploading a larger video file"""
+        mock_task.return_value = "Successfully processed video"
         large_video_file = SimpleUploadedFile(
             name='large_video.mp4',
             content=b'x' * (5 * 1024 * 1024),  # 5MB file
@@ -174,7 +178,7 @@ class VideoUploadTest(TestCase):
             'file': self.video_file
         }
         
-        with patch('api.views.process_video_task.delay'):
+        with patch('api.views.process_video_task', return_value="Successfully processed video"):
             response = self.client.post('/api/videos/', data, format='multipart')
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -189,18 +193,18 @@ class VideoUploadTest(TestCase):
         self.assertFalse(response.data['processed'])
         self.assertIsNone(response.data['duration'])
 
-    @patch('api.views.process_video_task.delay', side_effect=Exception('Celery error'))
-    def test_video_upload_celery_task_failure(self, mock_task):
-        """Test video upload when Celery task fails to queue"""
+    @patch('api.views.process_video_task', side_effect=Exception('Processing error'))
+    def test_video_upload_processing_failure(self, mock_task):
+        """Test video upload when processing fails"""
         data = {
             'title': 'Test Video',
             'file': self.video_file
         }
         
-        # This depends on how you handle Celery task failures
-        # You might want to catch exceptions in your view
+        # This depends on how you handle processing failures
         response = self.client.post('/api/videos/', data, format='multipart')
         
-        # Video should still be created even if task fails to queue
+        # Video should still be created even if processing fails
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Video.objects.filter(title='Test Video').exists())
+        self.assertIn('error', response.data)
