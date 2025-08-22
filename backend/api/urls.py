@@ -6,14 +6,16 @@ from .views import (
     VideoListView,
     VideoDetailView,
     VideoTranscriptView,
-    VideoSummaryView
+    VideoSummaryView,
+    RefreshView
 )
 
 urlpatterns = [
     # Authentication endpoints
     path('signup/', SignUpView.as_view(), name='signup'),
     path('authenticate/', AuthenticateView.as_view(), name='authenticate'),
-    
+    path('refresh/', RefreshView.as_view(), name='refresh'),
+
     # Video endpoints
     path('video/upload', VideoUploadView.as_view(), name='video-upload'),
     path('videos/', VideoListView.as_view(), name='video-list'),

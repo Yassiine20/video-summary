@@ -1,3 +1,4 @@
+import jwt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,10 +11,11 @@ from .serializers import (
     SummarySerializer
 )
 from .models import User, Video, Transcript, Summary
-from utils.jwt_helpers import generate_tokens
+from utils.jwt_helpers import generate_tokens, verify_token
 from .permissions import IsJwtAuthenticated
 from utils.video_helper import process_video
 from django.shortcuts import get_object_or_404
+from django.conf import settings
 
 class SignUpView(APIView):
     serializer_class = SignupSerializer
@@ -65,6 +67,25 @@ class AuthenticateView(APIView):
             }, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class RefreshView(APIView):
+    def post(self, request):
+        refresh_token = request.data.get("refresh_token")
+        if not refresh_token:
+            return Response({"error": "Refresh token required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            verified, data = verify_token(refresh_token, token_type="refresh", secret_key=settings.JWT_SECRET_KEY)
+            if not verified:
+                return Response({"error": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
+
+            user = get_object_or_404(User, id=data["user_id"])
+            tokens = generate_tokens(user)
+            return Response(tokens, status=status.HTTP_200_OK)
+        except jwt.ExpiredSignatureError:
+            return Response({"error": "Refresh token expired"}, status=status.HTTP_401_UNAUTHORIZED)
+        except jwt.InvalidTokenError:
+            return Response({"error": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
 
 class VideoUploadView(APIView):
     serializer_class = VideoSerializer
