@@ -1,0 +1,131 @@
+.auth-wrapper {
+  min-height: calc(100dvh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #0b1120, #0f172a 60%);
+}
+.panel {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 20px;
+  padding: 2.5rem 2.25rem;
+  max-width: 560px;
+  width: 100%;
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.95rem;
+  letter-spacing: -0.5px;
+  color: #f1f5f9;
+}
+p.subtitle {
+  margin: 0 0 2rem;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+}
+.row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.row .field {
+  flex: 1 1 210px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.field label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: #64748b;
+}
+.field input {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  color: #f1f5f9;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: 0.18s border, 0.18s background, 0.18s box-shadow;
+}
+.field input::placeholder {
+  color: #64748b;
+}
+.field input:focus {
+  outline: none;
+  border-color: #6366f1;
+  background: #24324b;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+.field.invalid input {
+  border-color: #ef4444;
+  background: #3a0f17;
+}
+.error {
+  font-size: 0.63rem;
+  color: #f87171;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  line-height: 1.25;
+  font-weight: 500;
+}
+.error.global {
+  background: #3b0d12;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  color: #fecaca;
+}
+.btn.w100 {
+  width: 100%;
+}
+.btn-primary {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+.btn-primary:hover {
+  background: #5558e6;
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.alt {
+  margin-top: 1.75rem;
+  font-size: 0.72rem;
+  color: #64748b;
+  text-align: center;
+}
+.alt a {
+  color: #818cf8;
+  text-decoration: none;
+  font-weight: 500;
+}
+.alt a:hover {
+  text-decoration: underline;
+}
+@media (max-width: 560px) {
+  .panel {
+    padding: 2rem 1.5rem;
+    border-radius: 18px;
+  }
+  h1 {
+    font-size: 1.75rem;
+  }
+}

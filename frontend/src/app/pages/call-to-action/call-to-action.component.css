@@ -1,0 +1,37 @@
+.cta {
+  margin-top: 2rem;
+  padding: 4rem 2rem;
+  background: #0f141c;
+  color: #fff;
+  text-align: center;
+}
+.cta h2 {
+  font-size: 2rem;
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+.cta p {
+  margin: 0 0 1.5rem;
+  color: #d1d5db;
+  font-size: 0.95rem;
+}
+.cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 0.85rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #fff;
+  background: transparent;
+  color: #fff;
+}
+.btn-primary {
+  background: #fff;
+  color: #0f141c;
+}

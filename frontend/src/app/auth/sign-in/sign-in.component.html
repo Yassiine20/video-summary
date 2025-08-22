@@ -1,0 +1,53 @@
+<div class="auth-wrapper">
+  <div class="panel">
+    <h1>Sign In</h1>
+    <p class="subtitle">Access your dashboard and AI summaries</p>
+    <form #f="ngForm" (ngSubmit)="submit(f)" novalidate>
+      <div class="field" [class.invalid]="submitted && username.invalid">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          required
+          [(ngModel)]="model.username"
+          #username="ngModel"
+          placeholder="yourusername"
+          autocomplete="username"
+        />
+        <div class="error" *ngIf="submitted && username.invalid">
+          <span *ngIf="username.errors?.['required']">Username is required</span>
+        </div>
+      </div>
+      <div class="field" [class.invalid]="submitted && password.invalid">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          required
+          minlength="6"
+          [(ngModel)]="model.password"
+          #password="ngModel"
+          placeholder="••••••••"
+          autocomplete="current-password"
+        />
+        <div class="error" *ngIf="submitted && password.invalid">
+          <span *ngIf="password.errors?.['required']"
+            >Password is required</span
+          >
+          <span *ngIf="password.errors?.['minlength']">Min 6 characters</span>
+        </div>
+      </div>
+
+      <div class="error global" *ngIf="error">{{ error }}</div>
+
+      <button class="btn btn-primary w100" type="submit" [disabled]="loading">
+        {{ loading ? 'Signing In…' : 'Sign In' }}
+      </button>
+    </form>
+    <div class="alt">
+      Don't have an account? <a routerLink="/signup">Create one</a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,40 @@
+<div class="auth-wrapper">
+  <div class="panel">
+    <h1>Create Account</h1>
+    <p class="subtitle">Start summarizing your videos</p>
+    <form #f="ngForm" (ngSubmit)="submit(f)" novalidate>
+      <div class="row">
+        <div class="field" [class.invalid]="submitted && username.invalid">
+          <label for="username">Username</label>
+          <input id="username" name="username" required [(ngModel)]="model.username" #username="ngModel" />
+          <div class="error" *ngIf="submitted && username.invalid"><span>Required</span></div>
+        </div>
+        <div class="field" [class.invalid]="submitted && email.invalid">
+          <label for="email">Email</label>
+            <input id="email" name="email" type="email" required email [(ngModel)]="model.email" #email="ngModel" />
+          <div class="error" *ngIf="submitted && email.invalid"><span *ngIf="email.errors?.['required']">Required</span><span *ngIf="email.errors?.['email']">Invalid</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field" [class.invalid]="submitted && first_name.invalid">
+          <label for="first_name">First name</label>
+          <input id="first_name" name="first_name" required [(ngModel)]="model.first_name" #first_name="ngModel" />
+          <div class="error" *ngIf="submitted && first_name.invalid"><span>Required</span></div>
+        </div>
+        <div class="field" [class.invalid]="submitted && last_name.invalid">
+          <label for="last_name">Last name</label>
+          <input id="last_name" name="last_name" required [(ngModel)]="model.last_name" #last_name="ngModel" />
+          <div class="error" *ngIf="submitted && last_name.invalid"><span>Required</span></div>
+        </div>
+      </div>
+      <div class="field" [class.invalid]="submitted && password.invalid">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required minlength="6" [(ngModel)]="model.password" #password="ngModel" />
+        <div class="error" *ngIf="submitted && password.invalid"><span *ngIf="password.errors?.['required']">Required</span><span *ngIf="password.errors?.['minlength']">Min 6</span></div>
+      </div>
+      <div class="error global" *ngIf="error">{{ error }}</div>
+      <button class="btn btn-primary w100" type="submit" [disabled]="loading">{{ loading ? 'Creating…' : 'Sign Up' }}</button>
+    </form>
+    <div class="alt">Already have an account? <a routerLink="/signin">Sign in</a></div>
+  </div>
+</div>
