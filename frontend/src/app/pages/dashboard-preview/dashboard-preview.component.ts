@@ -14,6 +14,13 @@ interface VideoItem {
   duration: number | null;
 }
 
+interface DashboardStats {
+  totalVideos: number;
+  totalDuration: number;
+  processedVideos: number;
+  pendingVideos: number;
+}
+
 @Component({
   selector: 'app-dashboard-preview',
   standalone: true,
@@ -25,38 +32,122 @@ export class DashboardPreviewComponent implements OnInit {
   // Data
   selectedFile: File | null = null;
   title = '';
+  videos: VideoItem[] = [];
+  stats: DashboardStats = {
+    totalVideos: 0,
+    totalDuration: 0,
+    processedVideos: 0,
+    pendingVideos: 0,
+  };
 
   // UI State
   uploading = false;
   dragging = false;
+  loading = false;
+  activeTab: 'upload' | 'videos' | 'analytics' = 'upload';
 
   // Errors
   uploadError: string | null = null;
+  loadError: string | null = null;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
-  private getAuthHeadersForFormData(): HttpHeaders {
-    const token = localStorage.getItem('vs_access_token');
-    console.log('[Headers] Creating form-data headers with token:', !!token);
-
-    if (!token) {
-      return new HttpHeaders();
-    }
-
-    // Don't set Content-Type for FormData - let browser set it with boundary
-    return new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-    });
-  }
-
   get hasToken(): boolean {
-    const token = localStorage.getItem('vs_access_token');
-    console.log('[Dashboard] Token exists:', !!token);
+    const token = this.authService.accessToken;
     return !!token;
   }
 
   ngOnInit() {
-    console.log('[Dashboard] Component initialized');
+    this.loadUserVideos();
+  }
+
+  get user() {
+    return this.authService.user;
+  }
+
+  get userName() {
+    return this.user?.username || 'User';
+  }
+
+  // Load user's videos and calculate stats
+  loadUserVideos() {
+    if (!this.hasToken) return;
+
+    this.loading = true;
+    this.loadError = null;
+
+    this.http
+      .get<{ videos: VideoItem[]; count: number }>(
+        `${environment.apiBaseUrl}/videos/`
+      )
+      .subscribe({
+        next: (response) => {
+          this.videos = response.videos;
+          this.calculateStats();
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('[Dashboard] Load videos error:', err);
+          this.loadError = 'Failed to load videos';
+          this.loading = false;
+        },
+      });
+  }
+
+  // Calculate dashboard statistics
+  calculateStats() {
+    this.stats = {
+      totalVideos: this.videos.length,
+      totalDuration: this.videos.reduce(
+        (sum, video) => sum + (video.duration || 0),
+        0
+      ),
+      processedVideos: this.videos.filter((video) => video.processed).length,
+      pendingVideos: this.videos.filter((video) => !video.processed).length,
+    };
+  }
+
+  // Format duration in minutes
+  formatDuration(seconds: number): string {
+    if (!seconds) return '0m';
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}m`;
+  }
+
+  // Format date
+  formatDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
+  // Switch tabs
+  switchTab(tab: 'upload' | 'videos' | 'analytics') {
+    this.activeTab = tab;
+  }
+
+  // View video details
+  viewVideo(video: VideoItem) {
+    console.log('[Dashboard] View video:', video.id);
+    // Navigate to video detail page or open modal
+  }
+
+  // Delete video
+  deleteVideo(video: VideoItem) {
+    if (!confirm(`Delete "${video.title}"?`)) return;
+
+    this.http.delete(`${environment.apiBaseUrl}/video/${video.id}/`).subscribe({
+      next: () => {
+        this.videos = this.videos.filter((v) => v.id !== video.id);
+        this.calculateStats();
+        console.log('[Dashboard] Video deleted:', video.id);
+      },
+      error: (err) => {
+        console.error('[Dashboard] Delete error:', err);
+      },
+    });
   }
 
   // File selection
@@ -90,19 +181,20 @@ export class DashboardPreviewComponent implements OnInit {
     formData.append('title', this.title.trim());
     formData.append('file', this.selectedFile);
 
-    const headers = this.getAuthHeadersForFormData();
-    console.log('[API] Upload headers:', headers);
+    console.log('[API] Upload FormData prepared');
 
     this.http
-      .post<VideoItem>(`${environment.apiBaseUrl}/video/upload`, formData, {
-        headers,
-      })
+      .post<VideoItem>(`${environment.apiBaseUrl}/video/upload`, formData)
       .subscribe({
         next: (response) => {
           console.log('[API] Upload successful:', response);
           this.uploading = false;
           this.selectedFile = null;
           this.title = '';
+          // Refresh videos list
+          this.loadUserVideos();
+          // Switch to videos tab to see the new upload
+          this.activeTab = 'videos';
         },
         error: (err) => {
           console.error('[API] Upload error:', err);

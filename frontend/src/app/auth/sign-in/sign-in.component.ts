@@ -24,18 +24,12 @@ export class SignInComponent {
     this.error = null;
     if (form.invalid) return;
     this.loading = true;
-    console.log('[SignIn] submitting', this.model);
     this.auth.authenticate(this.model.username, this.model.password).subscribe({
       next: (res) => {
-        console.log('[SignIn] success', res);
         this.loading = false;
-        const navResult = this.router.navigateByUrl('/dashboard');
-        if (navResult instanceof Promise) {
-          navResult.then(ok => console.log('[SignIn] navigation result', ok)).catch(err => console.error('[SignIn] navigation error', err));
-        }
+        this.router.navigateByUrl('/dashboard');
       },
       error: (err) => {
-        console.error('[SignIn] error', err);
         this.loading = false;
         this.error = err?.error?.non_field_errors?.[0] || err?.error || 'Login failed';
       }

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { FeaturesComponent } from '../features/features.component';
-import { DashboardPreviewComponent } from '../dashboard-preview/dashboard-preview.component';
 import { TestimonialsComponent } from '../testimonials/testimonials.component';
 import { CallToActionComponent } from '../call-to-action/call-to-action.component';
 import { FooterComponent } from '../../shared/footer/footer.component';
@@ -10,7 +10,6 @@ import { FooterComponent } from '../../shared/footer/footer.component';
   standalone: true,
   imports: [
     FeaturesComponent,
-    DashboardPreviewComponent,
     TestimonialsComponent,
     CallToActionComponent,
     FooterComponent,
@@ -18,4 +17,10 @@ import { FooterComponent } from '../../shared/footer/footer.component';
   templateUrl: './hero.component.html',
   styleUrls: ['./hero.component.css'],
 })
-export class HeroComponent {}
+export class HeroComponent {
+  constructor(private router: Router) {}
+
+  navigateToSignup() {
+    this.router.navigate(['/signup']);
+  }
+}

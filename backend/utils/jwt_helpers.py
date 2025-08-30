@@ -13,7 +13,7 @@ def generate_tokens(user):
     access_payload = {
         "user_id": user.id,
         "username": user.username,
-        "exp": current_time + timedelta(minutes=5),
+        "exp": current_time + timedelta(minutes=1),
         "iat": current_time
     }
     access_token = jwt.encode(access_payload, settings.JWT_SECRET_KEY, algorithm="HS256")
@@ -43,8 +43,12 @@ def verify_token(token, token_type="access", secret_key=settings.JWT_SECRET_KEY)
     try:
         decoded = jwt.decode(token, secret_key, algorithms=["HS256"])
         return True, {key: val for key, val in decoded.items() if key not in ["exp", "iat"]}
-    except jwt.ExpiredSignatureError:
+    except jwt.ExpiredSignatureError as e:
+        logger.error(f"[JWT] Token expired: {e}")
+        return False, None
+    except jwt.InvalidTokenError as e:
+        logger.error(f"[JWT] Invalid token: {e}")
         return False, None
     except Exception as e:
-        logger.warning("error verifying jwt token: %s", e)
+        logger.error(f"[JWT] Token verification error: {e}")        
         return False, None

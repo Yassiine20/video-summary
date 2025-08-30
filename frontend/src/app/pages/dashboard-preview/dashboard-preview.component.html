@@ -1,48 +1,226 @@
 <section class="dashboard">
-  <h2 class="dash-title">Upload Video</h2>
-
-  <div
-    class="drop-wrapper"
-    [class.dragging]="dragging"
-    (dragenter)="onDragEnter($event)"
-    (dragover)="onDragOver($event)"
-    (dragleave)="onDragLeave($event)"
-    (drop)="onDrop($event)"
-  >
-    <div class="inner" (click)="fileInput.click()">
-      <div class="icon">⬆</div>
-      <p class="hint">Drag & drop a file here, or click to upload</p>
-      <button type="button" class="browse-btn">Browse</button>
-      <input
-        #fileInput
-        type="file"
-        accept="video/*"
-        (change)="onFileChange($event)"
-        hidden
-      />
+  <!-- Welcome Header -->
+  <div class="welcome-header">
+    <div class="welcome-content">
+      <h1 class="welcome-title">Welcome back, {{ userName }}!</h1>
+      <p class="welcome-subtitle">Manage your videos and summaries</p>
     </div>
-    <div class="selected" *ngIf="selectedFile">
-      <span>{{ selectedFile.name }}</span>
-      <button
-        type="button"
-        class="clear"
-        (click)="selectedFile = null; title = ''"
-      >
-        ✕
-      </button>
+    <div class="user-avatar">
+      {{ userName.charAt(0).toUpperCase() }}
     </div>
   </div>
 
-  <div class="title-row" *ngIf="selectedFile">
-    <input type="text" placeholder="Video title" [(ngModel)]="title" />
-    <button
-      class="btn btn-primary"
-      (click)="upload()"
-      [disabled]="uploading || !title.trim()"
-    >
-      {{ uploading ? "Uploading…" : "Upload" }}
+  <!-- Stats Overview -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📹</div>
+      <div class="stat-info">
+        <h3 class="stat-number">{{ stats.totalVideos }}</h3>
+        <p class="stat-label">Total Videos</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⏱️</div>
+      <div class="stat-info">
+        <h3 class="stat-number">{{ formatDuration(stats.totalDuration) }}</h3>
+        <p class="stat-label">Total Duration</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <h3 class="stat-number">{{ stats.processedVideos }}</h3>
+        <p class="stat-label">Processed</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-info">
+        <h3 class="stat-number">{{ stats.pendingVideos }}</h3>
+        <p class="stat-label">Pending</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'upload'"
+      (click)="switchTab('upload')">
+      <span class="tab-icon">⬆️</span>
+      Upload Video
+    </button>
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'videos'"
+      (click)="switchTab('videos')">
+      <span class="tab-icon">📁</span>
+      My Videos ({{ videos.length }})
+    </button>
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'analytics'"
+      (click)="switchTab('analytics')">
+      <span class="tab-icon">📊</span>
+      Analytics
     </button>
   </div>
 
-  <div class="error" *ngIf="uploadError">{{ uploadError }}</div>
+  <!-- Upload Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'upload'">
+    <div class="upload-section">
+      <h2 class="section-title">Upload New Video</h2>
+      
+      <div
+        class="drop-wrapper"
+        [class.dragging]="dragging"
+        (dragenter)="onDragEnter($event)"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)">
+        <div class="inner" (click)="fileInput.click()">
+          <div class="icon">⬆</div>
+          <p class="hint">Drag & drop a video file here, or click to browse</p>
+          <button type="button" class="browse-btn">Choose Video File</button>
+          <input
+            #fileInput
+            type="file"
+            accept="video/*"
+            (change)="onFileChange($event)"
+            hidden />
+        </div>
+        <div class="selected" *ngIf="selectedFile">
+          <div class="file-info">
+            <span class="file-name">{{ selectedFile.name }}</span>
+            <span class="file-size">{{ (selectedFile.size / (1024*1024)).toFixed(1) }} MB</span>
+          </div>
+          <button
+            type="button"
+            class="clear"
+            (click)="selectedFile = null; title = ''">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div class="upload-form" *ngIf="selectedFile">
+        <div class="form-group">
+          <label for="videoTitle">Video Title</label>
+          <input 
+            id="videoTitle"
+            type="text" 
+            placeholder="Enter a descriptive title for your video" 
+            [(ngModel)]="title" 
+            class="title-input" />
+        </div>
+        <button
+          class="btn btn-primary upload-btn"
+          (click)="upload()"
+          [disabled]="uploading || !title.trim()">
+          <span *ngIf="!uploading">
+            <span class="btn-icon">🚀</span>
+            Upload & Process
+          </span>
+          <span *ngIf="uploading" class="uploading">
+            <span class="spinner"></span>
+            Uploading...
+          </span>
+        </button>
+      </div>
+
+      <div class="error-message" *ngIf="uploadError">
+        <span class="error-icon">⚠️</span>
+        {{ uploadError }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Videos Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'videos'">
+    <div class="videos-section">
+      <div class="section-header">
+        <h2 class="section-title">My Videos</h2>
+        <button class="btn btn-secondary" (click)="loadUserVideos()" [disabled]="loading">
+          <span *ngIf="!loading">🔄 Refresh</span>
+          <span *ngIf="loading">Loading...</span>
+        </button>
+      </div>
+
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading your videos...</p>
+      </div>
+
+      <div *ngIf="loadError" class="error-message">
+        <span class="error-icon">⚠️</span>
+        {{ loadError }}
+      </div>
+
+      <div *ngIf="!loading && !loadError && videos.length === 0" class="empty-state">
+        <div class="empty-icon">📹</div>
+        <h3>No videos yet</h3>
+        <p>Upload your first video to get started!</p>
+        <button class="btn btn-primary" (click)="switchTab('upload')">Upload Video</button>
+      </div>
+
+      <div *ngIf="!loading && videos.length > 0" class="videos-grid">
+        <div class="video-card" *ngFor="let video of videos">
+          <div class="video-thumbnail">
+            <div class="thumbnail-placeholder">🎬</div>
+            <div class="video-duration" *ngIf="video.duration">
+              {{ formatDuration(video.duration) }}
+            </div>
+            <div class="processing-badge" [class.processed]="video.processed">
+              {{ video.processed ? '✅ Processed' : '⏳ Processing' }}
+            </div>
+          </div>
+          <div class="video-info">
+            <h3 class="video-title">{{ video.title }}</h3>
+            <p class="video-date">{{ formatDate(video.uploaded_at) }}</p>
+            <div class="video-actions">
+              <button class="btn btn-small btn-primary" (click)="viewVideo(video)">
+                👁️ View
+              </button>
+              <button class="btn btn-small btn-outline" (click)="deleteVideo(video)">
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'analytics'">
+    <div class="analytics-section">
+      <h2 class="section-title">Analytics Overview</h2>
+      
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <h3>Processing Success Rate</h3>
+          <div class="progress-ring">
+            <div class="progress-text">
+              {{ stats.totalVideos > 0 ? ((stats.processedVideos / stats.totalVideos) * 100).toFixed(0) : 0 }}%
+            </div>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <h3>Recent Activity</h3>
+          <div class="activity-list">
+            <div class="activity-item" *ngFor="let video of videos.slice(0, 3)">
+              <span class="activity-icon">{{ video.processed ? '✅' : '⏳' }}</span>
+              <span class="activity-text">{{ video.title }}</span>
+              <span class="activity-date">{{ formatDate(video.uploaded_at) }}</span>
+            </div>
+            <div *ngIf="videos.length === 0" class="no-activity">
+              No recent activity
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </section>
