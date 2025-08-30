@@ -1,25 +1,15 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { environment } from '../../../environments/environment';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
-
-interface VideoItem {
-  id: number;
-  title: string;
-  file: string;
-  uploaded_at: string;
-  processed: boolean;
-  duration: number | null;
-}
-
-interface DashboardStats {
-  totalVideos: number;
-  totalDuration: number;
-  processedVideos: number;
-  pendingVideos: number;
-}
+import {
+  VideoService,
+  VideoItem,
+  VideoDetail,
+  DashboardStats,
+} from '../../services/video.service';
+import { ErrorService } from '../../services/error.service';
 
 @Component({
   selector: 'app-dashboard-preview',
@@ -28,7 +18,7 @@ interface DashboardStats {
   templateUrl: './dashboard-preview.component.html',
   styleUrls: ['./dashboard-preview.component.css'],
 })
-export class DashboardPreviewComponent implements OnInit {
+export class DashboardPreviewComponent implements OnInit, OnDestroy {
   // Data
   selectedFile: File | null = null;
   title = '';
@@ -46,11 +36,23 @@ export class DashboardPreviewComponent implements OnInit {
   loading = false;
   activeTab: 'upload' | 'videos' | 'analytics' = 'upload';
 
+  // Video detail state (inline instead of modal)
+  selectedVideoForDetail: VideoDetail | null = null;
+  loadingVideoDetail = false;
+  videoDetailError: string | null = null;
+  detailTab: 'summary' | 'transcript' = 'summary';
+
   // Errors
   uploadError: string | null = null;
   loadError: string | null = null;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  private subscriptions = new Subscription();
+
+  constructor(
+    private authService: AuthService,
+    private videoService: VideoService,
+    private errorService: ErrorService
+  ) {}
 
   get hasToken(): boolean {
     const token = this.authService.accessToken;
@@ -58,7 +60,26 @@ export class DashboardPreviewComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.setupSubscriptions();
     this.loadUserVideos();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+  }
+
+  private setupSubscriptions() {
+    this.subscriptions.add(
+      this.videoService.videos$.subscribe((videos) => {
+        this.videos = videos;
+      })
+    );
+
+    this.subscriptions.add(
+      this.videoService.stats$.subscribe((stats) => {
+        this.stats = stats;
+      })
+    );
   }
 
   get user() {
@@ -67,60 +88,35 @@ export class DashboardPreviewComponent implements OnInit {
 
   get userName() {
     return this.user?.username || 'User';
-  }
-
-  // Load user's videos and calculate stats
+  } // Load user's videos using service
   loadUserVideos() {
     if (!this.hasToken) return;
 
     this.loading = true;
     this.loadError = null;
 
-    this.http
-      .get<{ videos: VideoItem[]; count: number }>(
-        `${environment.apiBaseUrl}/videos/`
-      )
-      .subscribe({
-        next: (response) => {
-          this.videos = response.videos;
-          this.calculateStats();
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('[Dashboard] Load videos error:', err);
-          this.loadError = 'Failed to load videos';
-          this.loading = false;
-        },
-      });
-  }
-
-  // Calculate dashboard statistics
-  calculateStats() {
-    this.stats = {
-      totalVideos: this.videos.length,
-      totalDuration: this.videos.reduce(
-        (sum, video) => sum + (video.duration || 0),
-        0
-      ),
-      processedVideos: this.videos.filter((video) => video.processed).length,
-      pendingVideos: this.videos.filter((video) => !video.processed).length,
-    };
-  }
-
-  // Format duration in minutes
-  formatDuration(seconds: number): string {
-    if (!seconds) return '0m';
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes}m`;
-  }
-
-  // Format date
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    this.videoService.loadVideos().subscribe({
+      next: () => {
+        this.loading = false;
+      },
+      error: (err) => {
+        this.errorService.showError('Failed to load videos');
+        this.loadError = 'Failed to load videos';
+        this.loading = false;
+      },
     });
+  }
+
+  // Calculate dashboard statistics (removed - now handled by service)
+
+  // Format duration using service utility
+  formatDuration(seconds: number | null): string {
+    return this.videoService.formatDuration(seconds);
+  }
+
+  // Format date using service utility
+  formatDate(dateString: string): string {
+    return this.videoService.formatDate(dateString);
   }
 
   // Switch tabs
@@ -128,24 +124,46 @@ export class DashboardPreviewComponent implements OnInit {
     this.activeTab = tab;
   }
 
-  // View video details
+  // View video details using service
   viewVideo(video: VideoItem) {
-    console.log('[Dashboard] View video:', video.id);
-    // Navigate to video detail page or open modal
+    this.selectedVideoForDetail = null;
+    this.videoDetailError = null;
+    this.loadingVideoDetail = true;
+
+    this.videoService.getVideoDetail(video.id).subscribe({
+      next: (response) => {
+        this.selectedVideoForDetail = response;
+        this.loadingVideoDetail = false;
+      },
+      error: (err) => {
+        this.errorService.showError('Failed to load video details');
+        this.videoDetailError = 'Failed to load video details';
+        this.loadingVideoDetail = false;
+      },
+    });
   }
 
-  // Delete video
+  // Go back to video list
+  backToVideoList() {
+    this.selectedVideoForDetail = null;
+    this.videoDetailError = null;
+  }
+
+  // Switch detail tabs
+  switchDetailTab(tab: 'summary' | 'transcript') {
+    this.detailTab = tab;
+  }
+
+  // Delete video using service
   deleteVideo(video: VideoItem) {
     if (!confirm(`Delete "${video.title}"?`)) return;
 
-    this.http.delete(`${environment.apiBaseUrl}/video/${video.id}/`).subscribe({
+    this.videoService.deleteVideo(video.id).subscribe({
       next: () => {
-        this.videos = this.videos.filter((v) => v.id !== video.id);
-        this.calculateStats();
-        console.log('[Dashboard] Video deleted:', video.id);
+        // Video removed from state by service
       },
       error: (err) => {
-        console.error('[Dashboard] Delete error:', err);
+        this.errorService.showError('Failed to delete video');
       },
     });
   }
@@ -158,10 +176,9 @@ export class DashboardPreviewComponent implements OnInit {
     if (this.selectedFile && !this.title) {
       this.title = this.selectedFile.name.replace(/\.[^.]+$/, '');
     }
-    console.log('[File] Selected:', this.selectedFile?.name);
   }
 
-  // Upload video
+  // Upload video using service
   upload() {
     if (!this.hasToken) {
       this.uploadError = 'Not authenticated';
@@ -173,33 +190,21 @@ export class DashboardPreviewComponent implements OnInit {
       return;
     }
 
-    console.log('[API] Uploading video:', this.title);
     this.uploading = true;
     this.uploadError = null;
 
-    const formData = new FormData();
-    formData.append('title', this.title.trim());
-    formData.append('file', this.selectedFile);
-
-    console.log('[API] Upload FormData prepared');
-
-    this.http
-      .post<VideoItem>(`${environment.apiBaseUrl}/video/upload`, formData)
+    this.videoService
+      .uploadVideo(this.selectedFile, this.title.trim())
       .subscribe({
-        next: (response) => {
-          console.log('[API] Upload successful:', response);
+        next: () => {
           this.uploading = false;
           this.selectedFile = null;
           this.title = '';
-          // Refresh videos list
-          this.loadUserVideos();
           // Switch to videos tab to see the new upload
           this.activeTab = 'videos';
         },
-        error: (err) => {
-          console.error('[API] Upload error:', err);
-          this.uploadError =
-            err.error?.detail || err.message || 'Upload failed';
+        error: () => {
+          this.uploadError = 'Upload failed';
           this.uploading = false;
         },
       });
@@ -244,8 +249,14 @@ export class DashboardPreviewComponent implements OnInit {
       return;
     }
 
-    console.log('[Drag] File dropped:', file.name);
     this.selectedFile = file;
     this.title = file.name.replace(/\.[^.]+$/, '');
+  }
+
+  // Utility method for formatting time in transcript
+  formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 }

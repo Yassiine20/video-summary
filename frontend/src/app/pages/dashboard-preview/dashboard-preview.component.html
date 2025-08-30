@@ -44,24 +44,27 @@
 
   <!-- Tab Navigation -->
   <div class="tab-navigation">
-    <button 
-      class="tab-button" 
+    <button
+      class="tab-button"
       [class.active]="activeTab === 'upload'"
-      (click)="switchTab('upload')">
+      (click)="switchTab('upload')"
+    >
       <span class="tab-icon">⬆️</span>
       Upload Video
     </button>
-    <button 
-      class="tab-button" 
+    <button
+      class="tab-button"
       [class.active]="activeTab === 'videos'"
-      (click)="switchTab('videos')">
+      (click)="switchTab('videos')"
+    >
       <span class="tab-icon">📁</span>
       My Videos ({{ videos.length }})
     </button>
-    <button 
-      class="tab-button" 
+    <button
+      class="tab-button"
       [class.active]="activeTab === 'analytics'"
-      (click)="switchTab('analytics')">
+      (click)="switchTab('analytics')"
+    >
       <span class="tab-icon">📊</span>
       Analytics
     </button>
@@ -71,14 +74,15 @@
   <div class="tab-content" *ngIf="activeTab === 'upload'">
     <div class="upload-section">
       <h2 class="section-title">Upload New Video</h2>
-      
+
       <div
         class="drop-wrapper"
         [class.dragging]="dragging"
         (dragenter)="onDragEnter($event)"
         (dragover)="onDragOver($event)"
         (dragleave)="onDragLeave($event)"
-        (drop)="onDrop($event)">
+        (drop)="onDrop($event)"
+      >
         <div class="inner" (click)="fileInput.click()">
           <div class="icon">⬆</div>
           <p class="hint">Drag & drop a video file here, or click to browse</p>
@@ -88,17 +92,21 @@
             type="file"
             accept="video/*"
             (change)="onFileChange($event)"
-            hidden />
+            hidden
+          />
         </div>
         <div class="selected" *ngIf="selectedFile">
           <div class="file-info">
             <span class="file-name">{{ selectedFile.name }}</span>
-            <span class="file-size">{{ (selectedFile.size / (1024*1024)).toFixed(1) }} MB</span>
+            <span class="file-size"
+              >{{ (selectedFile.size / (1024 * 1024)).toFixed(1) }} MB</span
+            >
           </div>
           <button
             type="button"
             class="clear"
-            (click)="selectedFile = null; title = ''">
+            (click)="selectedFile = null; title = ''"
+          >
             ✕
           </button>
         </div>
@@ -107,17 +115,19 @@
       <div class="upload-form" *ngIf="selectedFile">
         <div class="form-group">
           <label for="videoTitle">Video Title</label>
-          <input 
+          <input
             id="videoTitle"
-            type="text" 
-            placeholder="Enter a descriptive title for your video" 
-            [(ngModel)]="title" 
-            class="title-input" />
+            type="text"
+            placeholder="Enter a descriptive title for your video"
+            [(ngModel)]="title"
+            class="title-input"
+          />
         </div>
         <button
           class="btn btn-primary upload-btn"
           (click)="upload()"
-          [disabled]="uploading || !title.trim()">
+          [disabled]="uploading || !title.trim()"
+        >
           <span *ngIf="!uploading">
             <span class="btn-icon">🚀</span>
             Upload & Process
@@ -139,53 +149,219 @@
   <!-- Videos Tab -->
   <div class="tab-content" *ngIf="activeTab === 'videos'">
     <div class="videos-section">
-      <div class="section-header">
-        <h2 class="section-title">My Videos</h2>
-        <button class="btn btn-secondary" (click)="loadUserVideos()" [disabled]="loading">
-          <span *ngIf="!loading">🔄 Refresh</span>
-          <span *ngIf="loading">Loading...</span>
-        </button>
-      </div>
+      <!-- Video List View -->
+      <div *ngIf="!selectedVideoForDetail">
+        <div class="section-header">
+          <h2 class="section-title">My Videos</h2>
+          <button
+            class="btn btn-secondary"
+            (click)="loadUserVideos()"
+            [disabled]="loading"
+          >
+            <span *ngIf="!loading">🔄 Refresh</span>
+            <span *ngIf="loading">Loading...</span>
+          </button>
+        </div>
 
-      <div *ngIf="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Loading your videos...</p>
-      </div>
+        <div *ngIf="loading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading your videos...</p>
+        </div>
 
-      <div *ngIf="loadError" class="error-message">
-        <span class="error-icon">⚠️</span>
-        {{ loadError }}
-      </div>
+        <div *ngIf="loadError" class="error-message">
+          <span class="error-icon">⚠️</span>
+          {{ loadError }}
+        </div>
 
-      <div *ngIf="!loading && !loadError && videos.length === 0" class="empty-state">
-        <div class="empty-icon">📹</div>
-        <h3>No videos yet</h3>
-        <p>Upload your first video to get started!</p>
-        <button class="btn btn-primary" (click)="switchTab('upload')">Upload Video</button>
-      </div>
+        <div
+          *ngIf="!loading && !loadError && videos.length === 0"
+          class="empty-state"
+        >
+          <div class="empty-icon">📹</div>
+          <h3>No videos yet</h3>
+          <p>Upload your first video to get started!</p>
+          <button class="btn btn-primary" (click)="switchTab('upload')">
+            Upload Video
+          </button>
+        </div>
 
-      <div *ngIf="!loading && videos.length > 0" class="videos-grid">
-        <div class="video-card" *ngFor="let video of videos">
-          <div class="video-thumbnail">
-            <div class="thumbnail-placeholder">🎬</div>
-            <div class="video-duration" *ngIf="video.duration">
-              {{ formatDuration(video.duration) }}
+        <div *ngIf="!loading && videos.length > 0" class="videos-grid">
+          <div class="video-card" *ngFor="let video of videos">
+            <div class="video-thumbnail">
+              <div class="thumbnail-placeholder">🎬</div>
+              <div class="video-duration" *ngIf="video.duration">
+                {{ formatDuration(video.duration) }}
+              </div>
+              <div class="processing-badge" [class.processed]="video.processed">
+                {{ video.processed ? "✅ Processed" : "⏳ Processing" }}
+              </div>
             </div>
-            <div class="processing-badge" [class.processed]="video.processed">
-              {{ video.processed ? '✅ Processed' : '⏳ Processing' }}
+            <div class="video-info">
+              <h3 class="video-title">{{ video.title }}</h3>
+              <p class="video-date">{{ formatDate(video.uploaded_at) }}</p>
+              <div class="video-actions">
+                <button
+                  class="btn btn-small btn-primary"
+                  (click)="viewVideo(video)"
+                >
+                  👁️ View Details
+                </button>
+                <button
+                  class="btn btn-small btn-outline"
+                  (click)="deleteVideo(video)"
+                >
+                  🗑️ Delete
+                </button>
+              </div>
             </div>
           </div>
-          <div class="video-info">
-            <h3 class="video-title">{{ video.title }}</h3>
-            <p class="video-date">{{ formatDate(video.uploaded_at) }}</p>
-            <div class="video-actions">
-              <button class="btn btn-small btn-primary" (click)="viewVideo(video)">
-                👁️ View
-              </button>
-              <button class="btn btn-small btn-outline" (click)="deleteVideo(video)">
-                🗑️ Delete
-              </button>
+        </div>
+      </div>
+
+      <!-- Video Detail View -->
+      <div *ngIf="selectedVideoForDetail">
+        <div class="section-header">
+          <button class="btn btn-secondary" (click)="backToVideoList()">
+            ← Back to Videos
+          </button>
+          <h2 class="section-title">Video Details</h2>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loadingVideoDetail" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading video details...</p>
+        </div>
+
+        <!-- Error State -->
+        <div *ngIf="videoDetailError" class="error-state">
+          <p class="error-message">{{ videoDetailError }}</p>
+          <button
+            class="btn btn-primary"
+            (click)="
+              viewVideo({
+                id: selectedVideoForDetail!.id,
+                title: selectedVideoForDetail!.title,
+                duration: selectedVideoForDetail!.duration,
+                uploaded_at: selectedVideoForDetail!.uploaded_at,
+                processed: selectedVideoForDetail!.processed,
+                file_url: selectedVideoForDetail!.file
+              })
+            "
+          >
+            Retry
+          </button>
+        </div>
+
+        <!-- Video Details Content -->
+        <div
+          *ngIf="!loadingVideoDetail && !videoDetailError"
+          class="video-detail-view"
+        >
+          <!-- Basic Info -->
+          <div class="video-detail-header">
+            <h3>{{ selectedVideoForDetail.title }}</h3>
+            <div class="video-meta">
+              <span class="meta-item">
+                <strong>Duration:</strong>
+                {{ formatDuration(selectedVideoForDetail.duration) }}
+              </span>
+              <span class="meta-item">
+                <strong>Uploaded:</strong>
+                {{ formatDate(selectedVideoForDetail.uploaded_at) }}
+              </span>
+              <span class="meta-item">
+                <strong>Status:</strong>
+                <span
+                  [class]="
+                    selectedVideoForDetail.processed
+                      ? 'status-processed'
+                      : 'status-pending'
+                  "
+                >
+                  {{
+                    selectedVideoForDetail.processed
+                      ? "Processed"
+                      : "Processing..."
+                  }}
+                </span>
+              </span>
             </div>
+          </div>
+
+          <!-- Detail Tabs -->
+          <div class="detail-tabs">
+            <button
+              class="detail-tab"
+              [class.active]="detailTab === 'summary'"
+              (click)="switchDetailTab('summary')"
+            >
+              📄 Summary
+            </button>
+            <button
+              class="detail-tab"
+              [class.active]="detailTab === 'transcript'"
+              (click)="switchDetailTab('transcript')"
+            >
+              📝 Transcript
+            </button>
+          </div>
+
+          <!-- Summary Content -->
+          <div *ngIf="detailTab === 'summary'" class="detail-content">
+            <div
+              *ngIf="
+                selectedVideoForDetail.summary &&
+                  selectedVideoForDetail.summary.length > 0;
+                else noSummary
+              "
+            >
+              <div
+                *ngFor="let summaryItem of selectedVideoForDetail.summary"
+                class="summary-item"
+              >
+                <div class="summary-text">{{ summaryItem.text }}</div>
+                <div class="summary-date">
+                  Created: {{ formatDate(summaryItem.created_at) }}
+                </div>
+              </div>
+            </div>
+            <ng-template #noSummary>
+              <div class="no-content">
+                <div class="no-content-icon">📄</div>
+                <h4>No summary available</h4>
+                <p>Summary will be generated once the video is processed.</p>
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Transcript Content -->
+          <div *ngIf="detailTab === 'transcript'" class="detail-content">
+            <div
+              *ngIf="
+                selectedVideoForDetail.transcript &&
+                  selectedVideoForDetail.transcript.length > 0;
+                else noTranscript
+              "
+            >
+              <div
+                *ngFor="let transcriptItem of selectedVideoForDetail.transcript"
+                class="transcript-item"
+              >
+                <div class="transcript-time">
+                  {{ formatTime(transcriptItem.start_time) }} -
+                  {{ formatTime(transcriptItem.end_time) }}
+                </div>
+                <div class="transcript-text">{{ transcriptItem.text }}</div>
+              </div>
+            </div>
+            <ng-template #noTranscript>
+              <div class="no-content">
+                <div class="no-content-icon">📝</div>
+                <h4>No transcript available</h4>
+                <p>Transcript will be generated once the video is processed.</p>
+              </div>
+            </ng-template>
           </div>
         </div>
       </div>
@@ -196,24 +372,34 @@
   <div class="tab-content" *ngIf="activeTab === 'analytics'">
     <div class="analytics-section">
       <h2 class="section-title">Analytics Overview</h2>
-      
+
       <div class="analytics-grid">
         <div class="analytics-card">
           <h3>Processing Success Rate</h3>
           <div class="progress-ring">
             <div class="progress-text">
-              {{ stats.totalVideos > 0 ? ((stats.processedVideos / stats.totalVideos) * 100).toFixed(0) : 0 }}%
+              {{
+                stats.totalVideos > 0
+                  ? ((stats.processedVideos / stats.totalVideos) * 100).toFixed(
+                      0
+                    )
+                  : 0
+              }}%
             </div>
           </div>
         </div>
-        
+
         <div class="analytics-card">
           <h3>Recent Activity</h3>
           <div class="activity-list">
             <div class="activity-item" *ngFor="let video of videos.slice(0, 3)">
-              <span class="activity-icon">{{ video.processed ? '✅' : '⏳' }}</span>
+              <span class="activity-icon">{{
+                video.processed ? "✅" : "⏳"
+              }}</span>
               <span class="activity-text">{{ video.title }}</span>
-              <span class="activity-date">{{ formatDate(video.uploaded_at) }}</span>
+              <span class="activity-date">{{
+                formatDate(video.uploaded_at)
+              }}</span>
             </div>
             <div *ngIf="videos.length === 0" class="no-activity">
               No recent activity

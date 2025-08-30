@@ -13,7 +13,7 @@ def generate_tokens(user):
     access_payload = {
         "user_id": user.id,
         "username": user.username,
-        "exp": current_time + timedelta(minutes=1),
+        "exp": current_time + timedelta(minutes=15),
         "iat": current_time
     }
     access_token = jwt.encode(access_payload, settings.JWT_SECRET_KEY, algorithm="HS256")
