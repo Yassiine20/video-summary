@@ -10,7 +10,7 @@ A Django-based application that processes video files to generate transcripts an
 
 This repository contains a Django backend that accepts video uploads, transcribes audio using OpenAI Whisper, and generates AI summaries (via Groq). Processing is performed asynchronously by Celery workers with Redis as the recommended broker.
 
-This README provides a concise project description and step-by-step developer setup (Windows PowerShell focused). Follow the Quick Start to run the project locally.
+Follow the Quick Start to run the project locally.
 
 ---
 
@@ -22,7 +22,7 @@ This README provides a concise project description and step-by-step developer se
 - Summarization: Groq LLM (requires `GROQ_API_KEY`)
 - Frontend: Angular (in `frontend/`)
 
-## Quick Start (Windows PowerShell)
+## Quick Start (Windows)
 
 Assumes you run commands from the repository root.
 
@@ -30,7 +30,7 @@ Assumes you run commands from the repository root.
 
 ```powershell
 python -m venv venv
-& .\venv\Scripts\Activate.ps1
+& .\venv\Scripts\Activate
 ```
 
 2. Install backend dependencies
@@ -39,30 +39,15 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-3. Create backend environment file (recommended: `backend/.env` or repo root `.env`)
-   Copy `backend/.env.example` or the repository root `.env.example` and fill secrets.
-
-Required (examples):
-
-```env
-SECRET_KEY=replace_with_secure_value
-JWT_SECRET_KEY=replace_with_secure_value
-GROQ_API_KEY=your_groq_api_key
-FRONTEND_BASE_URL=http://localhost:4200
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=you@example.com
-EMAIL_HOST_PASSWORD=your-smtp-password
-CELERY_BROKER_URL=redis://localhost:6379/0
-CELERY_RESULT_BACKEND=redis://localhost:6379/0
-DEBUG=True
-```
+3. Create backend environment file (recommended: `backend/.env`)
+   ```powershell
+   cd backend
+   cp .env.example .env
+   ```
 
 4. Apply database migrations and create admin user
 
 ```powershell
-cd backend
 python manage.py migrate
 python manage.py createsuperuser
 cd ..
@@ -81,7 +66,7 @@ docker run -p 6379:6379 --name video-summary-redis -d redis:7
 
 ```powershell
 cd backend
-& .\venv\Scripts\Activate.ps1
+& .\venv\Scripts\Activate
 celery -A settings worker --loglevel=info
 ```
 
@@ -146,10 +131,9 @@ video-summary/
 └── .env.example            # Example env file
 ```
 
-## Production considerations
+## Potential considerations
 
 - Use PostgreSQL for production databases.
-- Serve static/media files from cloud storage (AWS S3) or a dedicated server.
 - Use a process manager (systemd, Supervisor) for Celery/Django and a reverse proxy (nginx) for Django.
 - Configure proper logging, monitoring, and secrets management.
 
