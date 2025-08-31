@@ -31,6 +31,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
+# Base URL for the frontend application (used when constructing links in emails)
+# Set this to e.g. 'http://localhost:4200' in development or your production frontend URL.
+FRONTEND_BASE_URL = config('FRONTEND_BASE_URL', default='http://localhost:4200')
+
 
 # Application definition
 AUTH_USER_MODEL = "api.User"
@@ -159,3 +163,22 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:4200',
     'http://127.0.0.1:4200',
 ]
+
+# Celery Configuration with Redis (from .env for flexibility)
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = config('CELERY_TIMEZONE', default='UTC')
+CELERY_TASK_TRACK_STARTED = config('CELERY_TASK_TRACK_STARTED', default=True, cast=bool)
+CELERY_TASK_TIME_LIMIT = config('CELERY_TASK_TIME_LIMIT', default=30 * 60, cast=int)  # 30 minutes max per task
+
+# Email backend configuration (Gmail example)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)

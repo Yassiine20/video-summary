@@ -15,7 +15,6 @@ export class HeaderComponent {
 
   logout() {
     this.authService.logout();
-    // Optionally redirect to home
     window.location.href = '/';
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, interval, switchMap, takeWhile, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface VideoItem {
@@ -40,6 +40,37 @@ export interface DashboardStats {
   pendingVideos: number;
 }
 
+// New interfaces for async processing
+export interface VideoUploadResponse extends VideoItem {
+  message: string;
+  task_id: string;
+  status: string;
+}
+
+export interface TaskStatusResponse {
+  task_id: string;
+  status: string; // PENDING, STARTED, SUCCESS, FAILURE
+  ready: boolean;
+  result?: any;
+  error?: string;
+  progress?: {
+    current: number;
+    total: number;
+    message: string;
+  };
+}
+
+export interface ProcessingVideo {
+  video: VideoItem;
+  taskId: string;
+  status: string;
+  progress?: {
+    current: number;
+    total: number;
+    message: string;
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -54,6 +85,10 @@ export class VideoService {
     pendingVideos: 0,
   });
   public stats$ = this.statsSubject.asObservable();
+
+  // Track videos currently being processed
+  private processingVideosSubject = new BehaviorSubject<ProcessingVideo[]>([]);
+  public processingVideos$ = this.processingVideosSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -70,16 +105,29 @@ export class VideoService {
       );
   }
 
-  uploadVideo(title: string, file: File): Observable<any> {
+  uploadVideo(title: string, file: File): Observable<VideoUploadResponse> {
     const formData = new FormData();
     formData.append('title', title.trim());
     formData.append('file', file);
 
     return this.http
-      .post(`${environment.apiBaseUrl}/video/upload`, formData)
+      .post<VideoUploadResponse>(`${environment.apiBaseUrl}/video/upload`, formData)
       .pipe(
-        tap(() => {
-          // Refresh videos after successful upload
+        tap((response) => {
+          // Add video to processing list
+          const processingVideo: ProcessingVideo = {
+            video: response,
+            taskId: response.task_id,
+            status: response.status,
+          };
+          
+          const currentProcessing = this.processingVideosSubject.value;
+          this.processingVideosSubject.next([...currentProcessing, processingVideo]);
+          
+          // Start polling for this task
+          this.startTaskPolling(response.task_id, response);
+          
+          // Refresh videos list
           this.loadVideos().subscribe();
         })
       );
@@ -100,6 +148,70 @@ export class VideoService {
         this.videosSubject.next(updatedVideos);
         this.calculateStats(updatedVideos);
       })
+    );
+  }
+
+  // New methods for async processing
+  getTaskStatus(taskId: string): Observable<TaskStatusResponse> {
+    return this.http.get<TaskStatusResponse>(
+      `${environment.apiBaseUrl}/task/${taskId}/status/`
+    );
+  }
+
+  private startTaskPolling(taskId: string, video: VideoUploadResponse) {
+    // Poll every 2 seconds
+    interval(2000)
+      .pipe(
+        switchMap(() => this.getTaskStatus(taskId)),
+        takeWhile((status) => !status.ready, true), // Include the final emission
+        tap((status) => this.updateProcessingVideoStatus(taskId, status))
+      )
+      .subscribe({
+        next: (status) => {
+          if (status.ready) {
+            this.handleTaskComplete(taskId, status, video);
+          }
+        },
+        error: (error) => {
+          console.error('Error polling task status:', error);
+          this.removeFromProcessing(taskId);
+        }
+      });
+  }
+
+  private updateProcessingVideoStatus(taskId: string, status: TaskStatusResponse) {
+    const currentProcessing = this.processingVideosSubject.value;
+    const updatedProcessing = currentProcessing.map(pv => 
+      pv.taskId === taskId 
+        ? { ...pv, status: status.status, progress: status.progress }
+        : pv
+    );
+    this.processingVideosSubject.next(updatedProcessing);
+  }
+
+  private handleTaskComplete(taskId: string, status: TaskStatusResponse, video: VideoUploadResponse) {
+    if (status.status === 'SUCCESS') {
+      // Task completed successfully, refresh videos list
+      this.loadVideos().subscribe();
+    } else if (status.status === 'FAILURE') {
+      console.error('Video processing failed:', status.error);
+      // Could emit an error event or show notification
+    }
+    
+    // Remove from processing list
+    this.removeFromProcessing(taskId);
+  }
+
+  private removeFromProcessing(taskId: string) {
+    const currentProcessing = this.processingVideosSubject.value;
+    const updatedProcessing = currentProcessing.filter(pv => pv.taskId !== taskId);
+    this.processingVideosSubject.next(updatedProcessing);
+  }
+
+  // Method to manually refresh a specific task (useful for UI)
+  refreshTaskStatus(taskId: string): Observable<TaskStatusResponse> {
+    return this.getTaskStatus(taskId).pipe(
+      tap((status) => this.updateProcessingVideoStatus(taskId, status))
     );
   }
 

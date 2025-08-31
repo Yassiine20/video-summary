@@ -8,7 +8,8 @@ import {
   VideoItem,
   VideoDetail,
   DashboardStats,
-} from '../../services/video.service';
+  ProcessingVideo,
+} from '../../core/services/video.service';
 import { ErrorService } from '../../services/error.service';
 
 @Component({
@@ -23,6 +24,7 @@ export class DashboardPreviewComponent implements OnInit, OnDestroy {
   selectedFile: File | null = null;
   title = '';
   videos: VideoItem[] = [];
+  processingVideos: ProcessingVideo[] = [];
   stats: DashboardStats = {
     totalVideos: 0,
     totalDuration: 0,
@@ -78,6 +80,12 @@ export class DashboardPreviewComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.videoService.stats$.subscribe((stats) => {
         this.stats = stats;
+      })
+    );
+
+    this.subscriptions.add(
+      this.videoService.processingVideos$.subscribe((processingVideos) => {
+        this.processingVideos = processingVideos;
       })
     );
   }
@@ -194,17 +202,21 @@ export class DashboardPreviewComponent implements OnInit, OnDestroy {
     this.uploadError = null;
 
     this.videoService
-      .uploadVideo(this.selectedFile, this.title.trim())
+      .uploadVideo(this.title.trim(), this.selectedFile)
       .subscribe({
-        next: () => {
+        next: (response) => {
           this.uploading = false;
           this.selectedFile = null;
           this.title = '';
-          // Switch to videos tab to see the new upload
+
+          // Show success message with task info
+          console.log('Video upload queued for processing:', response.task_id);
+
+          // Switch to videos tab to see the new upload and processing status
           this.activeTab = 'videos';
         },
-        error: () => {
-          this.uploadError = 'Upload failed';
+        error: (error) => {
+          this.uploadError = error.error?.message || 'Upload failed';
           this.uploading = false;
         },
       });
@@ -258,5 +270,17 @@ export class DashboardPreviewComponent implements OnInit, OnDestroy {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Method to refresh task status manually
+  refreshTaskStatus(taskId: string) {
+    this.videoService.refreshTaskStatus(taskId).subscribe({
+      next: (status) => {
+        console.log('Task status refreshed:', status);
+      },
+      error: (error) => {
+        console.error('Failed to refresh task status:', error);
+      },
+    });
   }
 }

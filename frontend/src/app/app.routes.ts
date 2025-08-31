@@ -7,12 +7,13 @@ import { CallToActionComponent } from './pages/call-to-action/call-to-action.com
 import { inject } from '@angular/core';
 import { AuthService } from './core/auth/auth.service';
 import { Router } from '@angular/router';
+import { UserProfileComponent } from './pages/user-profile/user-profile.component';
 
 // Auth guard function
 const authGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  
+
   if (authService.isAuthenticated) {
     return true;
   } else {
@@ -25,7 +26,7 @@ const authGuard = () => {
 const guestGuard = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  
+
   if (!authService.isAuthenticated) {
     return true;
   } else {
@@ -35,49 +36,72 @@ const guestGuard = () => {
 };
 
 export const routes: Routes = [
-  { 
-    path: '', 
-    component: HeroComponent, 
+  {
+    path: '',
+    component: HeroComponent,
     title: 'VideoSummarizer - Home',
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
   },
   {
     path: 'features',
     component: FeaturesComponent,
     title: 'Features - VideoSummarizer',
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
   },
   {
     path: 'dashboard',
     component: DashboardPreviewComponent,
     title: 'Dashboard - VideoSummarizer',
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'testimonials',
     component: TestimonialsComponent,
     title: 'Testimonials - VideoSummarizer',
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
   },
   {
     path: 'pricing',
     component: CallToActionComponent,
     title: 'Pricing - VideoSummarizer',
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
   },
   {
     path: 'signin',
     loadComponent: () =>
       import('./auth/sign-in/sign-in.component').then((m) => m.SignInComponent),
     title: 'Sign In - VideoSummarizer',
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
   },
   {
     path: 'signup',
     loadComponent: () =>
       import('./auth/sign-up/sign-up.component').then((m) => m.SignUpComponent),
     title: 'Sign Up - VideoSummarizer',
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./pages/auth/forgot-password/forgot-password.component').then(
+        (m) => m.ForgotPasswordComponent
+      ),
+    title: 'Forgot Password - VideoSummarizer',
+    canActivate: [guestGuard],
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./pages/auth/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent
+      ),
+    title: 'Reset Password - VideoSummarizer',
+    canActivate: [guestGuard],
+  },
+  {
+    path: 'profile',
+    component: UserProfileComponent,
+    canActivate: [authGuard],
   },
   { path: '**', redirectTo: '' },
 ];

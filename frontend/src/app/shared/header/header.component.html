@@ -3,7 +3,7 @@
     <span class="logo-icon">🎬</span>
     <span class="logo-text">VideoSummarizer</span>
   </div>
-  
+
   <!-- Navigation for logged out users -->
   <ul class="nav-links" *ngIf="!authService.isAuthenticated">
     <li>
@@ -14,7 +14,9 @@
         >Features</a
       >
     </li>
-    <li><a routerLink="/testimonials" routerLinkActive="active">Testimonials</a></li>
+    <li>
+      <a routerLink="/testimonials" routerLinkActive="active">Testimonials</a>
+    </li>
     <li><a routerLink="/pricing" routerLinkActive="active">Pricing</a></li>
   </ul>
 
@@ -31,6 +33,11 @@
 
   <!-- User menu for logged in users -->
   <div class="header-actions" *ngIf="authService.isAuthenticated">
-    <button class="btn-outline" (click)="logout()">Logout</button>
+    <a routerLink="/profile" class="btn-profile">
+      <span class="material-icons" style="vertical-align: middle">Profile</span>
+    </a>
+    <button class="btn-outline" (click)="logout()">
+      <span class="material-icons" style="vertical-align: middle">Logout</span>
+    </button>
   </div>
 </nav>

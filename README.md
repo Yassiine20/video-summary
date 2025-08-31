@@ -5,202 +5,158 @@ A Django-based application that processes video files to generate transcripts an
 ## Features
 
 - **Video Upload**: Upload video files for processing
-- **Audio Transcription**: Extract and transcribe audio using OpenAI Whisper
-- **AI Summarization**: Generate summaries using Groq's LLM API
-- **Asynchronous Processing**: Background task processing with Celery
-- **REST API**: Django REST Framework endpoints
-- **User Authentication**: JWT-based authentication system
 
-## Tech Stack
+# Video Summary — full-stack app (Django + Angular)
 
-### Backend
+This repository contains a Django backend that accepts video uploads, transcribes audio using OpenAI Whisper, and generates AI summaries (via Groq). Processing is performed asynchronously by Celery workers with Redis as the recommended broker.
 
-- **Django 5.2.5** - Web framework
-- **Django REST Framework** - API development
-- **Celery** - Asynchronous task processing
-- **OpenAI Whisper** - Audio transcription
-- **Groq API** - Text summarization
-- **SQLite** - Database (development)
-- **Redis/RabbitMQ** - Message broker for Celery
+This README provides a concise project description and step-by-step developer setup (Windows PowerShell focused). Follow the Quick Start to run the project locally.
 
-### Frontend
+---
 
-- _[To be implemented]_
+## Quick overview
 
-## Project Structure
+- Backend: Django + Django REST Framework
+- Background processing: Celery + Redis
+- Transcription: OpenAI Whisper (CPU or GPU)
+- Summarization: Groq LLM (requires `GROQ_API_KEY`)
+- Frontend: Angular (in `frontend/`)
 
-```
-video-summary/
-├── backend/
-│   ├── api/                    # Main API application
-│   │   ├── models.py          # Database models
-│   │   ├── views.py           # API views
-│   │   ├── serializers.py     # DRF serializers
-│   │   ├── tasks.py           # Celery tasks
-│   │   └── tests/             # Unit tests
-│   ├── settings/              # Django settings
-│   │   ├── settings.py        # Main settings
-│   │   ├── celery.py          # Celery configuration
-│   │   └── urls.py            # URL configuration
-│   ├── utils/                 # Utility functions
-│   │   ├── jwt_helpers.py     # JWT utilities
-│   │   └── video_helper.py    # Video processing utilities
-│   ├── videos/                # Uploaded video files
-│   └── manage.py              # Django management script
-├── frontend/                  # Frontend application (TBD)
-├── venv/                      # Virtual environment
-├── .gitignore                 # Git ignore rules
-└── README.md                  # This file
+## Quick Start (Windows PowerShell)
+
+Assumes you run commands from the repository root.
+
+1. Create & activate Python venv
+
+```powershell
+python -m venv venv
+& .\venv\Scripts\Activate.ps1
 ```
 
-## Installation
+2. Install backend dependencies
 
-### Prerequisites
+```powershell
+pip install -r requirements.txt
+```
 
-- Python 3.12+
-- Redis or RabbitMQ (for Celery)
-- FFmpeg (for video processing)
+3. Create backend environment file (recommended: `backend/.env` or repo root `.env`)
+   Copy `backend/.env.example` or the repository root `.env.example` and fill secrets.
 
-### Setup
+Required (examples):
 
-1. **Clone the repository**
+```env
+SECRET_KEY=replace_with_secure_value
+JWT_SECRET_KEY=replace_with_secure_value
+GROQ_API_KEY=your_groq_api_key
+FRONTEND_BASE_URL=http://localhost:4200
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=you@example.com
+EMAIL_HOST_PASSWORD=your-smtp-password
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+DEBUG=True
+```
 
-   ```bash
-   git clone <repository-url>
-   cd video-summary
-   ```
+4. Apply database migrations and create admin user
 
-2. **Create virtual environment**
-
-   ```bash
-   python -m venv venv
-   # Windows
-   venv\Scripts\activate
-   # Linux/Mac
-   source venv/bin/activate
-   ```
-
-3. **Install dependencies**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Environment variables**
-   Create a `.env` file in the backend directory:
-
-   ```env
-   SECRET_KEY=your-django-secret-key
-   JWT_SECRET_KEY=your-jwt-secret-key
-   GROQ_API_KEY=your-groq-api-key
-   DEBUG=True
-   ```
-
-5. **Database setup**
-
-   ```bash
-   cd backend
-   python manage.py migrate
-   python manage.py createsuperuser
-   ```
-
-6. **Start Redis/RabbitMQ**
-
-   ```bash
-   # For Redis
-   redis-server
-
-   # For RabbitMQ
-   rabbitmq-server
-   ```
-
-7. **Start Celery worker**
-
-   ```bash
-   celery -A settings worker --loglevel=info
-   ```
-
-8. **Run development server**
-   ```bash
-   python manage.py runserver
-   ```
-
-## API Endpoints
-
-### Authentication
-
-- `POST /api/auth/register/` - User registration
-- `POST /api/auth/login/` - User login
-- `POST /api/auth/logout/` - User logout
-
-### Video Processing
-
-- `POST /api/videos/upload/` - Upload video for processing
-- `GET /api/videos/` - List user's videos
-- `GET /api/videos/{id}/` - Get video details
-- `GET /api/videos/{id}/transcript/` - Get video transcript
-- `GET /api/videos/{id}/summary/` - Get video summary
-
-## Usage
-
-1. **Register/Login** to get access token
-2. **Upload a video** using the upload endpoint
-3. **Wait for processing** - Celery will handle transcription and summarization
-4. **Retrieve results** using the transcript and summary endpoints
-
-## Development
-
-### Running Tests
-
-```bash
+```powershell
 cd backend
+python manage.py migrate
+python manage.py createsuperuser
+cd ..
+```
+
+5. Start Redis (required by Celery)
+
+On Windows you can run Redis via WSL, Docker, or a Windows build. Example (Docker):
+
+```powershell
+# using Docker
+docker run -p 6379:6379 --name video-summary-redis -d redis:7
+```
+
+6. Start Celery worker (run in a separate terminal)
+
+```powershell
+cd backend
+& .\venv\Scripts\Activate.ps1
+celery -A settings worker --loglevel=info
+```
+
+7. Run the Django development server
+
+```powershell
+cd backend
+& .\venv\Scripts\Activate.ps1
+python manage.py runserver 0.0.0.0:8000
+```
+
+8. Start the frontend dev server (optional)
+
+```powershell
+cd frontend
+npm install
+npm start
+```
+
+Open the frontend at http://localhost:4200 and the API at http://localhost:8000.
+
+---
+
+## Development notes
+
+- Environment files: keep your real `.env` out of git. Use `.env.example` to document variables. The project uses `python-decouple` to read env variables.
+- If you run Whisper on GPU, install a CUDA-compatible `torch` build and ensure `torch.cuda.is_available()` is True.
+- If email is not required while developing, set an email backend like `django.core.mail.backends.console.EmailBackend` in `settings.py` to print emails to console.
+
+## Useful commands
+
+- Backup and regenerate requirements (PowerShell):
+
+```powershell
+Copy-Item .\requirements.txt .\requirements-full.txt
+& .\venv\Scripts\Activate.ps1
+pip freeze > requirements.txt
+```
+
+- Run tests (backend):
+
+```powershell
+cd backend
+& .\venv\Scripts\Activate.ps1
 python manage.py test
 ```
 
-### Code Style
+---
 
-- Follow PEP 8 guidelines
-- Use Black for code formatting
-- Use isort for import sorting
+## Project structure (high level)
 
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## Configuration
-
-### Celery Settings
-
-The application uses Celery for background processing. Configure your broker in `settings/settings.py`:
-
-```python
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'  # or RabbitMQ URL
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+```
+video-summary/
+├── backend/                # Django project
+│   ├── api/                # API app (models, views, serializers, tasks)
+│   ├── settings/           # Django settings + celery wiring
+│   ├── utils/              # helpers (whisper, groq usage)
+│   └── manage.py
+├── frontend/               # Angular app (UI)
+├── requirements.txt        # Backend runtime requirements
+├── requirements-dev.txt    # (optional) dev/test requirements
+└── .env.example            # Example env file
 ```
 
-### Video Storage
+## Production considerations
 
-Videos are stored in the `backend/videos/` directory. In production, consider using cloud storage like AWS S3.
+- Use PostgreSQL for production databases.
+- Serve static/media files from cloud storage (AWS S3) or a dedicated server.
+- Use a process manager (systemd, Supervisor) for Celery/Django and a reverse proxy (nginx) for Django.
+- Configure proper logging, monitoring, and secrets management.
 
-## Deployment
+---
 
-### Production Considerations
+If you want, I can also:
 
-- Use PostgreSQL instead of SQLite
-- Configure proper media file storage
-- Set up proper logging
-- Use environment variables for all secrets
-- Configure CORS for frontend integration
-- Set up monitoring and error tracking
-
-## License
-
-_[Add your license here]_
-
-## Support
-
-_[Add support information here]_
+- Add a `backend/README.md` with only backend setup steps.
+- Create `requirements-dev.txt` and `requirements-ml.txt` to separate heavy ML deps.
+- Generate a short checklist for deploying to a VPS or Dockerizing the stack.

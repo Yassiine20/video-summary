@@ -1353,3 +1353,108 @@ h4 {
     padding: 3rem 1.5rem;
   }
 }
+
+/* Processing Videos Section */
+.processing-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+  border-radius: 15px;
+  border-left: 4px solid #fdcb6e;
+}
+
+.processing-title {
+  margin: 0 0 1rem 0;
+  color: #2d3436;
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processing-title::before {
+  content: "⚡";
+  font-size: 1.4rem;
+}
+
+.processing-videos {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.processing-video {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 1rem;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(10px);
+}
+
+.processing-info {
+  flex: 1;
+}
+
+.processing-video-title {
+  margin: 0 0 0.5rem 0;
+  color: #2d3436;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.processing-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.status-text {
+  font-size: 0.875rem;
+  color: #636e72;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.progress-bar {
+  width: 200px;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00b894, #00cec9);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  color: #636e72;
+}
+
+.processing-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .processing-video {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .progress-bar {
+    width: 100%;
+  }
+
+  .processing-actions {
+    align-self: flex-end;
+  }
+}

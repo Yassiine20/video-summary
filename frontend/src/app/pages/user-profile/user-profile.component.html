@@ -1,0 +1,28 @@
+<div class="user-profile">
+  <div class="profile-header">
+    <span class="profile-avatar">
+      <span class="material-icons" style="font-size: 3rem; color: #1976d2"
+        ></span
+      >
+    </span>
+    <div>
+      <h2>{{ user?.username }}</h2>
+      <p class="profile-email">{{ user?.email || "Not available" }}</p>
+    </div>
+  </div>
+  <div *ngIf="user; else noUser" class="profile-details">
+    <div class="profile-row">
+      <span class="profile-label">Username:</span>
+      <span>{{ user.username }}</span>
+    </div>
+    <div class="profile-row">
+      <span class="profile-label">Email:</span>
+      <span>{{ user.email || "Not available" }}</span>
+    </div>
+    <!-- Add more fields here if available -->
+    <button class="btn-primary">Edit Info</button>
+  </div>
+  <ng-template #noUser>
+    <p>No user info available.</p>
+  </ng-template>
+</div>

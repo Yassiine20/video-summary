@@ -62,3 +62,24 @@ class VideoDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
         fields = ["id", "title", "file", "uploaded_at", "processed", "duration", "transcript", "summary"]
+
+class UserEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name']
+        extra_kwargs = {
+            'email': {'required': False},
+            'username': {'required': False},
+            'first_name': {'required': False},
+            'last_name': {'required': False},
+        }
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)

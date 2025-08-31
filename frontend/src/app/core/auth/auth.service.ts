@@ -108,7 +108,7 @@ export class AuthService {
     this.setCookie(this.cookieKeyRefresh, res.refresh_token, 30); // 30 days for refresh token
     this.setCookie(
       this.cookieKeyUser,
-      JSON.stringify({ id: res.id, username: res.username }),
+      JSON.stringify({ id: res.id, username: res.username, email: res.email }),
       30 // 30 days for user info
     );
   }
@@ -127,7 +127,7 @@ export class AuthService {
     return this.getCookie(this.cookieKeyRefresh);
   }
 
-  get user(): { id: number; username: string } | null {
+  get user(): { id: number; username: string; email?: string } | null {
     const userCookie = this.getCookie(this.cookieKeyUser);
     if (!userCookie) return null;
 

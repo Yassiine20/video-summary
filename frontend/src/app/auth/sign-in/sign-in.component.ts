@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-sign-in',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './sign-in.component.html',
   styleUrls: ['./sign-in.component.css'],
 })
@@ -31,8 +31,9 @@ export class SignInComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err?.error?.non_field_errors?.[0] || err?.error || 'Login failed';
-      }
+        this.error =
+          err?.error?.non_field_errors?.[0] || err?.error || 'Login failed';
+      },
     });
   }
 }

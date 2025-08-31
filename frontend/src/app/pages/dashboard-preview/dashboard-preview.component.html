@@ -163,6 +163,40 @@
           </button>
         </div>
 
+        <!-- Processing Videos Section -->
+        <div *ngIf="processingVideos.length > 0" class="processing-section">
+          <h3 class="processing-title">Currently Processing</h3>
+          <div class="processing-videos">
+            <div class="processing-video" *ngFor="let pv of processingVideos">
+              <div class="processing-info">
+                <h4 class="processing-video-title">{{ pv.video.title }}</h4>
+                <div class="processing-status">
+                  <span class="status-text">{{ pv.status }}</span>
+                  <div class="progress-bar" *ngIf="pv.progress">
+                    <div
+                      class="progress-fill"
+                      [style.width.%]="
+                        (pv.progress.current / pv.progress.total) * 100
+                      "
+                    ></div>
+                  </div>
+                  <span class="progress-text" *ngIf="pv.progress">
+                    {{ pv.progress.message || "Processing..." }}
+                  </span>
+                </div>
+              </div>
+              <div class="processing-actions">
+                <button
+                  class="btn btn-small btn-outline"
+                  (click)="refreshTaskStatus(pv.taskId)"
+                >
+                  🔄 Refresh
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div *ngIf="loading" class="loading-state">
           <div class="spinner"></div>
           <p>Loading your videos...</p>
@@ -245,11 +279,11 @@
                 duration: selectedVideoForDetail!.duration,
                 uploaded_at: selectedVideoForDetail!.uploaded_at,
                 processed: selectedVideoForDetail!.processed,
-                file_url: selectedVideoForDetail!.file
+                file: selectedVideoForDetail!.file
               })
             "
           >
-            Retry
+            > Retry
           </button>
         </div>
 
