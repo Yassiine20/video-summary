@@ -137,10 +137,3 @@ video-summary/
 - Use a process manager (systemd, Supervisor) for Celery/Django and a reverse proxy (nginx) for Django.
 - Configure proper logging, monitoring, and secrets management.
 
----
-
-If you want, I can also:
-
-- Add a `backend/README.md` with only backend setup steps.
-- Create `requirements-dev.txt` and `requirements-ml.txt` to separate heavy ML deps.
-- Generate a short checklist for deploying to a VPS or Dockerizing the stack.
